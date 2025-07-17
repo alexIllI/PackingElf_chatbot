@@ -1,0 +1,58 @@
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+chatglmbot-env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache/
+dist/
+build/
+*.egg-info/
+
+# Environment and Configuration
+.env
+.env.local
+.env.production
+
+# Model files (too large for git)
+models/
+*.gguf
+
+# Logs
+logs/
+*.log
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Deployment packages
+*.zip
+*.tar.gz
+chatglm3-discord-bot_*
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3 

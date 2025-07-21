@@ -6,7 +6,7 @@ import mysql.connector
 from mysql.connector import Error
 from typing import Optional, Tuple, List, Dict, Any, Union
 import logging
-from .config import ConfigManager
+from config import ConfigManager
 
 logger = logging.getLogger(__name__)
 

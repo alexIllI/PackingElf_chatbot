@@ -1,28 +1,21 @@
-# Core Discord bot functionality
+# Discord Bot
 discord.py>=2.3.0
-python-dotenv>=1.0.0
 
-# Database connectivity
+# Database
+sqlalchemy>=2.0.0
+pymysql>=1.1.0
 mysql-connector-python>=8.0.0
 
-# AI/ML dependencies
-gpt4all>=2.0.0
+# AI Model
+llama-cpp-python>=0.2.0
 
-# System utilities
-psutil>=5.9.0
+# Utilities
+python-dotenv>=1.0.0
+pathlib2>=2.3.0
 
-# Windows-specific dependencies (only installed on Windows)
-pywin32>=306; sys_platform == "win32"
+# Logging and async
+asyncio-mqtt>=0.16.0
 
-# Logging and monitoring
-colorlog>=6.8.0
-
-# Error handling and validation
-pydantic>=2.0.0
-
-# Async utilities
-aiofiles>=23.0.0
-
-# Development dependencies (optional)
-pytest>=7.4.0; python_version >= "3.7"
-pytest-asyncio>=0.21.0; python_version >= "3.7" 
+# Development
+pytest>=7.0.0
+pytest-asyncio>=0.21.0 

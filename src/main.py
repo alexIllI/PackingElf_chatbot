@@ -5,8 +5,14 @@ ChatGLM3 Discord Bot - Main Entry Point
 import sys
 import logging
 from pathlib import Path
-from .bot import ChatGLM3Bot
-from .config import ConfigManager
+
+# Add src to path for imports
+src_path = Path(__file__).parent
+if str(src_path) not in sys.path:
+    sys.path.insert(0, str(src_path))
+
+from bot import ChatGLM3Bot
+from config import ConfigManager
 
 def setup_logging():
     """Setup logging configuration"""

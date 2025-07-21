@@ -38,7 +38,7 @@ chatglm3-discord-bot/
 │   ├── install.bat         # Windows installer
 │   └── install.sh          # Linux/Mac installer
 ├── models/                  # AI model files (not in repo)
-│   └── chatglm3-6b.Q4_0.gguf
+│   └── chatglm3-6b.Q4_K_M.gguf
 ├── logs/                    # Application logs (not in repo)
 ├── venv/                    # Virtual environment (not in repo)
 ├── run.py                   # Application runner
@@ -55,7 +55,7 @@ chatglm3-discord-bot/
 - pip package manager
 - Discord bot token
 - MySQL server (local or LAN)
-- ChatGLM3-6B GGUF model (Q4 or Q5)
+- ChatGLM3-6B GGUF model (Q4_K_M recommended)
 - Windows 10/11 (for auto-startup features)
 
 ---
@@ -86,9 +86,16 @@ pip install -r requirements.txt
 
 ### 2. Download ChatGLM3 GGUF Model
 
-1. Visit HuggingFace: [ChatGLM3 GGUF Models](https://huggingface.co/TheBloke/ChatGLM3-6B-GGUF)
-2. Download `chatglm3-6b.Q4_0.gguf` (recommended for balance of speed/quality)
+1. Visit HuggingFace: [mradermacher/chatglm3-6b-GGUF](https://huggingface.co/mradermacher/chatglm3-6b-GGUF)
+2. Download `chatglm3-6b.Q4_K_M.gguf` (4.2GB, fast and recommended)
 3. Create `models/` directory and place the file there
+
+**Model Options:**
+
+- **Q4_K_M** (4.2GB) - Fast, recommended for most use cases
+- **Q4_K_S** (3.9GB) - Faster, slightly lower quality
+- **Q5_K** (4.8GB) - Better quality, slower
+- **Q6_K** (5.6GB) - Very good quality, slower
 
 ### 3. Configure Environment
 
@@ -119,7 +126,7 @@ MYSQL_DATABASE=your_database_name
 MYSQL_PORT=3306
 
 # AI Model Configuration
-MODEL_PATH=models/chatglm3-6b.Q4_0.gguf
+MODEL_PATH=models/chatglm3-6b.Q4_K_M.gguf
 
 # Bot Configuration
 COMMAND_PREFIX=!
@@ -247,7 +254,7 @@ Users receive a ZIP package and follow these steps:
 1. **Extract package** to desired location
 2. **Run installer**: `install.bat` (Windows) or `./install.sh` (Linux/Mac)
 3. **Configure**: Edit `.env` file with their settings
-4. **Download model**: Get ChatGLM3 model file
+4. **Download model**: Get ChatGLM3 model file from [mradermacher/chatglm3-6b-GGUF](https://huggingface.co/mradermacher/chatglm3-6b-GGUF)
 5. **Start bot**: `python run.py`
 
 ---

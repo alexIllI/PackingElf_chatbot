@@ -21,6 +21,7 @@ build/
 .env
 .env.local
 .env.production
+bot.env
 
 # Model files (too large for git)
 models/

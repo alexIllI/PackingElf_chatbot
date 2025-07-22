@@ -124,6 +124,8 @@ class DatabaseCommands(commands.Cog):
             • "待處理訂單" (pending)
             • "已取消訂單" (cancelled)
             • "已送達訂單" (delivered)
+            • "已關閉訂單" (closed)
+            • "根據訂單狀態查詢訂單 CLOSED"
             • "查詢pending的訂單" (英文狀態)
             • "shipped orders" (英文查詢)
             """,
@@ -135,7 +137,7 @@ class DatabaseCommands(commands.Cog):
             value="""
             • 訂單查詢 (PG格式: PG + 8位數字)
             • 客戶搜尋 (按客戶名稱)
-            • 訂單狀態查詢 (處理中/已發貨/待處理/已取消/已送達)
+            • 訂單狀態查詢 (處理中/已發貨/待處理/已取消/已送達/已關閉)
             • 產品查詢 (按SKU、名稱、分類)
             • 統計資訊 (訂單統計、產品統計)
             • 最近記錄查詢
@@ -247,6 +249,18 @@ class DatabaseCommands(commands.Cog):
                 # Use new function selector for query processing
                 result = function_selector.process_query(message.content)
                 
+                # Get function selection info for debugging (only if AI is available)
+                debug_info = ""
+                if self.bot.is_ai_ready:
+                    try:
+                        selection = function_selector.select_function_and_params(message.content)
+                        if selection.get('success'):
+                            func_name = selection.get('function', 'unknown')
+                            params = selection.get('parameters', {})
+                            debug_info = f"\n🔧 已選用函數: `{func_name}` 參數: `{params}`"
+                    except Exception as e:
+                        self.logger.error(f"Error getting debug info: {e}")
+                
                 # If function selector fails, fall back to old query handler
                 if not result['success']:
                     self.logger.warning("Function selector failed, using fallback query handler")
@@ -255,18 +269,8 @@ class DatabaseCommands(commands.Cog):
                 # Format the response
                 response = query_handler.format_response(result)
                 
-                # Add function selector info for debugging (only if AI is available)
-                if self.bot.is_ai_ready:
-                    # Get function selection info for debugging
-                    try:
-                        selection = function_selector.select_function_and_params(message.content)
-                        if selection.get('success'):
-                            func_name = selection.get('function', 'unknown')
-                            params = selection.get('parameters', {})
-                            debug_info = f"\n🔧 已選用函數: `{func_name}` 參數: `{params}`"
-                            response += debug_info
-                    except Exception as e:
-                        self.logger.error(f"Error getting debug info: {e}")
+                # Add debug info to response
+                response += debug_info
                 
                 # Send the response
                 if len(response) > 2000:

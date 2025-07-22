@@ -49,10 +49,10 @@ class DatabaseFunctionSelector:
                 "examples": ["最近10個訂單", "顯示最新訂單", "最近的訂單"]
             },
             "get_orders_by_status": {
-                "description": "根據訂單狀態查詢訂單 (狀態: processing/處理中, delivered/已送達, pending/待處理, cancelled/已取消, shipped/已發貨)",
+                "description": "根據訂單狀態查詢訂單 (狀態: processing/處理中, delivered/已送達, pending/待處理, cancelled/已取消, shipped/已發貨, closed/已關閉)",
                 "parameters": ["status"],
                 "function": db_reader.get_orders_by_status,
-                "examples": ["已發貨的訂單", "處理中訂單", "待處理訂單", "已取消訂單", "已送達訂單", "查詢處理中的訂單"]
+                "examples": ["已發貨的訂單", "處理中訂單", "待處理訂單", "已取消訂單", "已送達訂單", "已關閉訂單", "查詢處理中的訂單", "根據訂單狀態查詢訂單 CLOSED"]
             },
             "get_product_by_sku": {
                 "description": "根據產品SKU查詢產品",
@@ -181,9 +181,30 @@ class DatabaseFunctionSelector:
             'delivered': ['已送達', '已送达', 'delivered', '已交付', '已送達'],
             'pending': ['待處理', '待处理', 'pending', '等待中', '待辦'],
             'cancelled': ['已取消', 'cancelled', '取消', 'canceled'],
-            'shipped': ['已發貨', '已发货', 'shipped', '發貨', '发货']
+            'shipped': ['已發貨', '已发货', 'shipped', 'SHIPPED', '發貨', '发货', '已出貨'],
+            'closed': ['已關閉', 'closed', '關閉', 'CLOSED']
         }
         
+        # Check for explicit status query patterns first
+        status_query_patterns = [
+            '根據訂單狀態查詢訂單',
+            '根据订单状态查询订单',
+            'query orders by status',
+            'orders by status',
+            'status query'
+        ]
+        
+        if any(pattern in user_input for pattern in status_query_patterns):
+            # Extract status from the query
+            for status, keywords in status_keywords.items():
+                if any(keyword in user_input for keyword in keywords):
+                    return {
+                        'success': True,
+                        'function': 'get_orders_by_status',
+                        'parameters': {'status': status}
+                    }
+        
+        # Check for direct status keywords
         for status, keywords in status_keywords.items():
             if any(keyword in user_input for keyword in keywords):
                 return {
@@ -277,7 +298,8 @@ class DatabaseFunctionSelector:
                             'delivered': '已送達',
                             'pending': '待處理',
                             'cancelled': '已取消',
-                            'shipped': '已發貨'
+                            'shipped': '已發貨',
+                            'closed': '已關閉'
                         }
                         status_name = status_names.get(status, status)
                         message = f'找到 {len(result)} 個{status_name}狀態的訂單'
@@ -299,8 +321,22 @@ class DatabaseFunctionSelector:
                         'data': result
                     }
             else:
-                # Handle dictionary results (like statistics)
-                if function_name == 'get_order_statistics':
+                # Handle dictionary results (single items or statistics)
+                if function_name == 'get_order_by_id':
+                    order_id = parameters.get('order_id', '未知')
+                    return {
+                        'success': True,
+                        'message': f'找到訂單號 {order_id}',
+                        'data': [result]  # Wrap in list for consistent formatting
+                    }
+                elif function_name == 'get_product_by_sku':
+                    sku = parameters.get('sku', '未知')
+                    return {
+                        'success': True,
+                        'message': f'找到產品 SKU {sku}',
+                        'data': [result]  # Wrap in list for consistent formatting
+                    }
+                elif function_name == 'get_order_statistics':
                     return {
                         'success': True,
                         'message': '訂單統計資訊',
@@ -316,7 +352,7 @@ class DatabaseFunctionSelector:
                     return {
                         'success': True,
                         'message': '查詢成功',
-                        'data': result
+                        'data': [result]  # Wrap in list for consistent formatting
                     }
                 
         except Exception as e:

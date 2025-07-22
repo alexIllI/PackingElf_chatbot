@@ -49,10 +49,10 @@ class DatabaseFunctionSelector:
                 "examples": ["最近10個訂單", "顯示最新訂單", "最近的訂單"]
             },
             "get_orders_by_status": {
-                "description": "根據訂單狀態查詢訂單",
+                "description": "根據訂單狀態查詢訂單 (狀態: processing/處理中, delivered/已送達, pending/待處理, cancelled/已取消, shipped/已發貨)",
                 "parameters": ["status"],
                 "function": db_reader.get_orders_by_status,
-                "examples": ["已發貨的訂單", "處理中訂單", "待處理訂單"]
+                "examples": ["已發貨的訂單", "處理中訂單", "待處理訂單", "已取消訂單", "已送達訂單", "查詢處理中的訂單"]
             },
             "get_product_by_sku": {
                 "description": "根據產品SKU查詢產品",
@@ -175,6 +175,23 @@ class DatabaseFunctionSelector:
                 'parameters': {'limit': limit}
             }
         
+        # Check for order status queries
+        status_keywords = {
+            'processing': ['處理中', '处理中', 'processing', '進行中', '进行中'],
+            'delivered': ['已送達', '已送达', 'delivered', '已交付', '已送達'],
+            'pending': ['待處理', '待处理', 'pending', '等待中', '待辦'],
+            'cancelled': ['已取消', 'cancelled', '取消', 'canceled'],
+            'shipped': ['已發貨', '已发货', 'shipped', '發貨', '发货']
+        }
+        
+        for status, keywords in status_keywords.items():
+            if any(keyword in user_input for keyword in keywords):
+                return {
+                    'success': True,
+                    'function': 'get_orders_by_status',
+                    'parameters': {'status': status}
+                }
+        
         # Check for statistics
         if any(word in user_input for word in ['統計', '统计', 'statistics', '數據', '数据']):
             if any(word in user_input for word in ['產品', '产品', 'product']):
@@ -229,7 +246,7 @@ class DatabaseFunctionSelector:
             # Execute function
             result = func(*args) if args else func()
             
-            # Format result
+            # Format result based on function type
             if result is None:
                 if function_name == 'get_order_by_id':
                     order_id = parameters.get('order_id', '未知')
@@ -252,17 +269,55 @@ class DatabaseFunctionSelector:
                         'data': []
                     }
                 else:
+                    # Create appropriate message based on function type
+                    if function_name == 'get_orders_by_status':
+                        status = parameters.get('status', '未知狀態')
+                        status_names = {
+                            'processing': '處理中',
+                            'delivered': '已送達',
+                            'pending': '待處理',
+                            'cancelled': '已取消',
+                            'shipped': '已發貨'
+                        }
+                        status_name = status_names.get(status, status)
+                        message = f'找到 {len(result)} 個{status_name}狀態的訂單'
+                    elif function_name == 'search_orders_by_customer':
+                        customer = parameters.get('customer_name', '未知客戶')
+                        message = f'找到客戶 "{customer}" 的 {len(result)} 個訂單'
+                    elif function_name == 'get_recent_orders':
+                        limit = parameters.get('limit', 10)
+                        message = f'顯示最近 {len(result)} 個訂單 (最多 {limit} 個)'
+                    elif function_name == 'get_products_by_category':
+                        category = parameters.get('category', '未知分類')
+                        message = f'找到 {len(result)} 個 {category} 分類的產品'
+                    else:
+                        message = f'找到 {len(result)} 項結果'
+                    
                     return {
                         'success': True,
-                        'message': f'找到 {len(result)} 項結果',
+                        'message': message,
                         'data': result
                     }
             else:
-                return {
-                    'success': True,
-                    'message': '查詢成功',
-                    'data': result
-                }
+                # Handle dictionary results (like statistics)
+                if function_name == 'get_order_statistics':
+                    return {
+                        'success': True,
+                        'message': '訂單統計資訊',
+                        'data': result
+                    }
+                elif function_name == 'get_product_statistics':
+                    return {
+                        'success': True,
+                        'message': '產品統計資訊',
+                        'data': result
+                    }
+                else:
+                    return {
+                        'success': True,
+                        'message': '查詢成功',
+                        'data': result
+                    }
                 
         except Exception as e:
             self.logger.error(f"Error executing function {function_name}: {e}")

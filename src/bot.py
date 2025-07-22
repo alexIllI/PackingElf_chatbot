@@ -117,10 +117,25 @@ class DatabaseCommands(commands.Cog):
         )
         
         embed.add_field(
+            name="訂單狀態查詢",
+            value="""
+            • "查詢處理中的訂單" (processing)
+            • "已發貨的訂單" (shipped)
+            • "待處理訂單" (pending)
+            • "已取消訂單" (cancelled)
+            • "已送達訂單" (delivered)
+            • "查詢pending的訂單" (英文狀態)
+            • "shipped orders" (英文查詢)
+            """,
+            inline=False
+        )
+        
+        embed.add_field(
             name="支援的查詢類型",
             value="""
             • 訂單查詢 (PG格式: PG + 8位數字)
             • 客戶搜尋 (按客戶名稱)
+            • 訂單狀態查詢 (處理中/已發貨/待處理/已取消/已送達)
             • 產品查詢 (按SKU、名稱、分類)
             • 統計資訊 (訂單統計、產品統計)
             • 最近記錄查詢

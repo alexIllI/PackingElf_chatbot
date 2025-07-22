@@ -522,7 +522,8 @@ class QueryHandler:
         if not result['success']:
             return f"❌ 錯誤: {result['error']}"
         
-        if not result['data']:
+        # Handle None data or empty data
+        if result['data'] is None or (isinstance(result['data'], list) and len(result['data']) == 0):
             return f"ℹ️ {result['message']}"
         
         # Format based on data type
@@ -545,12 +546,19 @@ class QueryHandler:
     def _format_single_item(self, item: Dict[str, Any], message: str) -> str:
         """Format a single item response."""
         if 'external_order_id' in item:  # Order
+            # Format datetime objects
+            order_date = item['order_date']
+            if hasattr(order_date, 'strftime'):
+                order_date_str = order_date.strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                order_date_str = str(order_date)
+            
             return f"✅ {message}\n" + \
                    f"訂單號: {item['external_order_id']}\n" + \
                    f"客戶: {item['customer_name']}\n" + \
                    f"狀態: {item['status']}\n" + \
                    f"總金額: ${item['total']:.2f}\n" + \
-                   f"訂單日期: {item['order_date']}"
+                   f"訂單日期: {order_date_str}"
         
         elif 'sku' in item:  # Product
             return f"✅ {message}\n" + \
@@ -580,7 +588,14 @@ class QueryHandler:
         
         for i, item in enumerate(items[:display_count]):
             if 'external_order_id' in item:  # Order
-                summary += f"{i+1}. 訂單 {item['external_order_id']} - {item['customer_name']} (${item['total']:.2f})\n"
+                # Format datetime for order date
+                order_date = item.get('order_date')
+                if order_date and hasattr(order_date, 'strftime'):
+                    date_str = order_date.strftime('%m-%d')
+                else:
+                    date_str = 'N/A'
+                
+                summary += f"{i+1}. 訂單 {item['external_order_id']} - {item['customer_name']} (${item['total']:.2f}) [{item['status']}] {date_str}\n"
             elif 'sku' in item:  # Product
                 summary += f"{i+1}. {item['sku']} - {item['name']} (${item['price']:.2f})\n"
             elif 'username' in item:  # User
@@ -596,11 +611,26 @@ class QueryHandler:
     def _format_dict_data(self, data: Dict[str, Any], message: str) -> str:
         """Format dictionary data response."""
         if 'total_orders' in data:  # Order statistics
+            # Format status counts more nicely
+            status_display = []
+            for status, count in data['status_counts'].items():
+                status_names = {
+                    'processing': '處理中',
+                    'delivered': '已送達',
+                    'pending': '待處理',
+                    'cancelled': '已取消',
+                    'shipped': '已發貨',
+                    'closed': '已關閉',
+                    'returned': '已退貨'
+                }
+                status_name = status_names.get(status, status.upper())
+                status_display.append(f"{status_name}: {count}")
+            
             return f"✅ {message}\n" + \
                    f"總訂單數: {data['total_orders']}\n" + \
                    f"總收入: ${data['total_revenue']:.2f}\n" + \
                    f"平均訂單價值: ${data['average_order_value']:.2f}\n" + \
-                   f"狀態分佈: {', '.join([f'{k}: {v}' for k, v in data['status_counts'].items()])}"
+                   f"狀態分佈: {', '.join(status_display)}"
         
         elif 'total_products' in data:  # Product statistics
             return f"✅ {message}\n" + \

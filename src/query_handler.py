@@ -15,6 +15,17 @@ class QueryHandler:
         """Initialize the query handler."""
         self.logger = logging.getLogger(__name__)
         
+        # Status translation mapping
+        self.status_names = {
+            'processing': '處理中',
+            'delivered': '已送達',
+            'pending': '待處理',
+            'cancelled': '已取消',
+            'shipped': '已發貨',
+            'closed': '關轉',
+            'returned': '已退貨'
+        }
+        
         # Chinese keywords mapping (Traditional Chinese only)
         self.keywords = {
             'order': ['訂單', 'order', '訂單號', 'order_id', '訂單編號'],
@@ -48,9 +59,13 @@ class QueryHandler:
             'shipped': ['已發貨', 'shipped', '已列印'],
             'delivered': ['已送達', 'delivered', '已出貨'],
             'cancelled': ['已取消', 'cancelled', '取消'],
-            'closed': ['已關閉', 'closed', '關閉'],
+            'closed': ['關閉', 'closed', '關轉'],
             'returned': ['已退貨', 'returned', '退貨']
         }
+    
+    def _translate_status(self, status: str) -> str:
+        """Translate status to Chinese display name."""
+        return self.status_names.get(status, status.upper())
         
         # Category mappings (Traditional Chinese preferred)
         self.category_mappings = {
@@ -553,10 +568,13 @@ class QueryHandler:
             else:
                 order_date_str = str(order_date)
             
+            # Translate status to Chinese
+            status_display = self._translate_status(item['status'])
+            
             return f"✅ {message}\n" + \
                    f"訂單號: {item['external_order_id']}\n" + \
                    f"客戶: {item['customer_name']}\n" + \
-                   f"狀態: {item['status']}\n" + \
+                   f"狀態: {status_display}\n" + \
                    f"總金額: ${item['total']:.2f}\n" + \
                    f"訂單日期: {order_date_str}"
         
@@ -595,7 +613,10 @@ class QueryHandler:
                 else:
                     date_str = 'N/A'
                 
-                summary += f"{i+1}. 訂單 {item['external_order_id']} - {item['customer_name']} (${item['total']:.2f}) [{item['status']}] {date_str}\n"
+                # Translate status to Chinese
+                status_display = self._translate_status(item['status'])
+                
+                summary += f"{i+1}. 訂單 {item['external_order_id']} - {item['customer_name']} (${item['total']:.2f}) [{status_display}] {date_str}\n"
             elif 'sku' in item:  # Product
                 summary += f"{i+1}. {item['sku']} - {item['name']} (${item['price']:.2f})\n"
             elif 'username' in item:  # User
@@ -614,16 +635,7 @@ class QueryHandler:
             # Format status counts more nicely
             status_display = []
             for status, count in data['status_counts'].items():
-                status_names = {
-                    'processing': '處理中',
-                    'delivered': '已送達',
-                    'pending': '待處理',
-                    'cancelled': '已取消',
-                    'shipped': '已發貨',
-                    'closed': '已關閉',
-                    'returned': '已退貨'
-                }
-                status_name = status_names.get(status, status.upper())
+                status_name = self._translate_status(status)
                 status_display.append(f"{status_name}: {count}")
             
             return f"✅ {message}\n" + \
